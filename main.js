@@ -96,9 +96,73 @@ function loadSVG(url) {
 
   var helper = new THREE.GridHelper(160, 10);
   helper.rotation.x = Math.PI / 2;
-  // scene.add(helper);
+  scene.add(helper);
 
-  //
+  // LIGHTS
+
+  scene.add(new THREE.HemisphereLight(0x443333, 0x111122));
+
+  spotLight = new THREE.SpotLight(0xffffbb, 2);
+  spotLight.position.set(0.5, 0, 1);
+  spotLight.position.multiplyScalar(700);
+  scene.add(spotLight);
+
+  spotLight.castShadow = false;
+
+  // spotLight.shadow.mapSize.width = 2048;
+  // spotLight.shadow.mapSize.height = 2048;
+
+  // spotLight.shadow.camera.near = 200;
+  // spotLight.shadow.camera.far = 1500;
+
+  // spotLight.shadow.camera.fov = 40;
+
+  // spotLight.shadow.bias = - 0.005;
+
+  // instantiate a loader
+  var objloader = new THREE.OBJLoader();
+
+  // load a resource
+  objloader.load(
+    // resource URL
+    "Hand_01.obj",
+    // called when resource is loaded
+    function(object) {
+      console.log(object);
+      object.scale.multiplyScalar(10.25);
+
+      const mapHeight = new THREE.TextureLoader().load("skin.jpg");
+
+      var material = new THREE.MeshPhongMaterial({
+        color: 0x552811,
+        specular: 0x222222,
+        shininess: 25,
+        // bumpMap: mapHeight,
+        // bumpScale: 12
+      });
+
+      // material = new THREE.MeshBasicMaterial( { color: 0x444444 } );
+
+      object.material = material;
+
+      object.traverse(function(child) {
+        if (child instanceof THREE.Mesh) {
+          child.material = material;
+        }
+      });
+
+      // object.scale(20, 20);
+      scene.add(object);
+    },
+    // called when loading is in progresses
+    function(xhr) {
+      console.log((xhr.loaded / xhr.total) * 100 + "% loaded");
+    },
+    // called when loading has errors
+    function(error) {
+      console.log("An error happened");
+    }
+  );
 
   var loader = new THREE.SVGLoader();
 
@@ -106,7 +170,7 @@ function loadSVG(url) {
     var paths = data.paths;
 
     var group = new THREE.Group();
-    group.scale.multiplyScalar(20.25);
+    group.scale.multiplyScalar(25.25);
     // group.position.x = - 70;
     // group.position.y = 70;
     group.scale.y *= -1;
@@ -127,7 +191,6 @@ function loadSVG(url) {
       vertexShader: vs,
       fragmentShader: fsL
     });
-
 
     for (var i = 0; i < paths.length; i++) {
       var path = paths[i];
@@ -181,7 +244,10 @@ function loadSVG(url) {
           // twist(geometry);
 
           var mesh = new THREE.Mesh(geometry, material);
-          mesh.rotation.x = Math.PI;
+          mesh.rotation.z = Math.PI / 2;
+          mesh.translateX(-1.1);
+          mesh.translateZ(0.6);
+          mesh.translateY(1.0);
 
           const center = new THREE.Vector3();
           mesh.geometry.computeBoundingBox();
@@ -191,8 +257,11 @@ function loadSVG(url) {
           mesh.translateY(-center.y);
 
           modifier = new ModifierStack(mesh);
-          bend = new Bend(-0.5, 0.5, 0);
+          bend = new Bend(2, 0.5, 0);
           bend.constraint = ModConstant.NONE;
+          taper = new Taper(0.4)
+          modifier.addModifier(taper);
+
           modifier.addModifier(bend);
 
           group.add(mesh);
