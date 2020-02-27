@@ -41,7 +41,7 @@ function twist(geometry) {
     const xPos = geometry.vertices[i].x;
     const percent = xPos / width;
 
-    geometry.vertices[i].z = Math.sin(percent * Math.PI) + geometry.vertices[i].z;
+    geometry.vertices[i].z = -Math.sin(percent * Math.PI) + geometry.vertices[i].z;
   }
 
   // tells Three.js to re-render this mesh
@@ -96,7 +96,7 @@ function loadSVG(url) {
 
   var helper = new THREE.GridHelper(160, 10);
   helper.rotation.x = Math.PI / 2;
-  scene.add(helper);
+  // scene.add(helper);
 
   //
 
@@ -111,7 +111,7 @@ function loadSVG(url) {
     // group.position.y = 70;
     group.scale.y *= -1;
 
-    const leather = new THREE.ImageUtils.loadTexture("uv_grid_opengl.jpg");
+    const leather = new THREE.ImageUtils.loadTexture("texture.jpg");
     leather.wrapS = leather.wrapT = THREE.RepeatWrapping;
     var uniformsL = {
       leatherImage: { type: "t", value: leather }
@@ -128,8 +128,6 @@ function loadSVG(url) {
       fragmentShader: fsL
     });
 
-    // const bend = new Bend(0.4, 0.2, 0);
-    // bend.constraint = ModConstant.LEFT;
 
     for (var i = 0; i < paths.length; i++) {
       var path = paths[i];
@@ -165,9 +163,7 @@ function loadSVG(url) {
 
           shape.curves = fuckWithCurves(shape.curves);
 
-          // var geometry = new THREE.ShapeGeometry( shape );
-          //
-          const depth = 0.3;
+          const depth = 0.05;
 
           var geometry = new THREE.ExtrudeGeometry(shape, {
             depth: depth,
@@ -175,25 +171,17 @@ function loadSVG(url) {
             bevelEnabled: false
           });
 
-          // geometry.dynamic = true;
-
-          // THREE.GeometryUtils.center( geometry );
-
-          // var i, n = 6, maxEdgeLength = 4;
-          // for ( i = 0; i < n; i ++ ) THREE.GeometryUtils.tessellate( geometry, maxEdgeLength );
-
           maxEdgeLength = 1;
-          var times = 5; //Times to do the split of faces
+          var times = 15; //Times to do the split of faces
           var tessellateModifier = new THREE.TessellateModifier(maxEdgeLength);
           for (var i = 0; i < times; i++) {
             tessellateModifier.modify(geometry);
           }
 
-          twist(geometry);
+          // twist(geometry);
 
           var mesh = new THREE.Mesh(geometry, material);
           mesh.rotation.x = Math.PI;
-          // mesh.translateZ(-depth - 1);
 
           const center = new THREE.Vector3();
           mesh.geometry.computeBoundingBox();
@@ -203,9 +191,9 @@ function loadSVG(url) {
           mesh.translateY(-center.y);
 
           modifier = new ModifierStack(mesh);
-          bend = new Bend(1.5, 0.2, 0);
-          bend.constraint = ModConstant.LEFT;
-          // modifier.addModifier(bend);
+          bend = new Bend(-0.5, 0.5, 0);
+          bend.constraint = ModConstant.NONE;
+          modifier.addModifier(bend);
 
           group.add(mesh);
         }
