@@ -48,8 +48,9 @@ function twist(geometry) {
     const percent = xPos / width;
     
     geometry.vertices[i].z = Math.sin(percent * Math.PI) + geometry.vertices[i].z;
-    console.log(geometry.vertices[i].z);
   }
+
+
   
   // tells Three.js to re-render this mesh
   geometry.verticesNeedUpdate = true;
@@ -62,12 +63,15 @@ function fuckWithCurves(curves) {
     console.log(curve);
     console.log(curve.constructor.name);
     if (curve.constructor.name == 'LineCurve') {
+      console.log('modding curve')
       const startX = curve.v1.x;
       const startY = curve.v1.y;
       const endX = curve.v2.x;
       const endY = curve.v2.y;
 
       console.log(startX, startY, endX, endY)
+      console.log('width ' + (endX - startX))
+      console.log('height ' + (endY - startY))
 
       const NumPoints = 100;
 
@@ -83,7 +87,6 @@ function fuckWithCurves(curves) {
               startY + ((endY - startY) * ((i+1)/NumPoints))
             )
           );
-        console.log(c);
         newCurves.push(c);
       }
     } else {
@@ -161,21 +164,21 @@ function loadSVG(url) {
         for (var j = 0; j < shapes.length; j++) {
           
           var shape = shapes[j];
-          shape.holes = [];
+          shape.closePath();
           console.log(shape);
-          shape.holes = [];
 
+          console.log(shape);
+          
           shape.curves = fuckWithCurves(shape.curves);
 
-          var geometry = new THREE.ShapeGeometry( shape );
-
+          // var geometry = new THREE.ShapeGeometry( shape );
 
           const depth = 0.3;
 
-          // var geometry = new THREE.ExtrudeGeometry(shape, {
-          //   depth: depth,
-          //   bevelEnabled: false
-          // });
+          var geometry = new THREE.ExtrudeGeometry(shape, {
+            depth: depth,
+            bevelEnabled: false
+          });
 
           twist(geometry);
 
