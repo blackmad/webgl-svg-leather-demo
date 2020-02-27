@@ -161,6 +161,7 @@ function loadSVG(url) {
           
           var shape = shapes[j];
           console.log(shape);
+          shape.holes = [];
 
           shape.curves = fuckWithCurves(shape.curves);
 
