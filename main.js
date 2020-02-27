@@ -34,7 +34,7 @@ function init() {
     strokesWireframe: false
   };
 
-  loadSVG("/cuff.svg");
+  loadSVG("cuff.svg");
 }
 
 function twist(geometry) {
