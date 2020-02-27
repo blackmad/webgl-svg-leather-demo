@@ -47,7 +47,8 @@ function twist(geometry) {
     const xPos = geometry.vertices[i].x;
     const percent = xPos / width;
     
-    geometry.vertices[i].z = Math.pow(Math.sin(percent * Math.PI), 2) + geometry.vertices[i].z;
+    geometry.vertices[i].z = Math.sin(percent * Math.PI) + geometry.vertices[i].z;
+    console.log(geometry.vertices[i].z);
   }
   
   // tells Three.js to re-render this mesh
@@ -117,7 +118,7 @@ function loadSVG(url) {
     group.scale.y *= -1;
 
 
-    const leather = new THREE.ImageUtils.loadTexture("texture.jpg");
+    const leather = new THREE.ImageUtils.loadTexture("uv_grid_opengl.jpg");
     leather.wrapS = leather.wrapT = THREE.RepeatWrapping;
     var uniformsL = {
       leatherImage: { type: "t", value: leather }
@@ -146,20 +147,21 @@ function loadSVG(url) {
       if (guiData.drawFillShapes) {
         // var material = new THREE.MeshPhongMaterial({ color: 0x7777ff });
 
-        material = new THREE.MeshBasicMaterial( {
-          color: new THREE.Color().setStyle( {color: 0x7777ff}),
-          opacity: path.userData.style.fillOpacity,
-          transparent: path.userData.style.fillOpacity < 1,
-          side: THREE.SingleSide,
-          depthWrite: false,
-          wireframe: true,
-        } );
+        // material = new THREE.MeshBasicMaterial( {
+        //   color: new THREE.Color().setStyle( {color: 0x7777ff}),
+        //   opacity: path.userData.style.fillOpacity,
+        //   transparent: path.userData.style.fillOpacity < 1,
+        //   side: THREE.SingleSide,
+        //   depthWrite: false,
+        //   wireframe: true,
+        // } );
 
         var shapes = path.toShapes(false);
 
         for (var j = 0; j < shapes.length; j++) {
           
           var shape = shapes[j];
+          shape.holes = [];
           console.log(shape);
           shape.holes = [];
 
