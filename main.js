@@ -1,13 +1,11 @@
 // curve? https://stackoverflow.com/questions/51596272/warp-curve-all-vertices-around-a-pivot-point-axis-three-js-glsl
 
-var renderer, stats, scene, camera;
+var renderer, stats, scene, camera, modifier;
 
 init();
 animate();
 
 //
-
-
 
 function init() {
   var container = document.getElementById("container");
@@ -15,12 +13,10 @@ function init() {
   camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 1, 1000);
   camera.position.set(0, 0, 200);
 
-
   renderer = new THREE.WebGLRenderer({ antialias: true });
   renderer.setPixelRatio(window.devicePixelRatio);
   renderer.setSize(window.innerWidth, window.innerHeight);
   container.appendChild(renderer.domElement);
-
 
   var controls = new THREE.OrbitControls(camera, renderer.domElement);
   controls.screenSpacePanning = true;
@@ -38,20 +34,16 @@ function init() {
 }
 
 function twist(geometry) {
-  geometry.computeBoundingBox()
-  const width = 
-    geometry.boundingBox.max.x -
-    geometry.boundingBox.min.x;
+  geometry.computeBoundingBox();
+  const width = geometry.boundingBox.max.x - geometry.boundingBox.min.x;
 
   for (let i = 0; i < geometry.vertices.length; i++) {
     const xPos = geometry.vertices[i].x;
     const percent = xPos / width;
-    
+
     geometry.vertices[i].z = Math.sin(percent * Math.PI) + geometry.vertices[i].z;
   }
 
-
-  
   // tells Three.js to re-render this mesh
   geometry.verticesNeedUpdate = true;
 }
@@ -59,49 +51,48 @@ function twist(geometry) {
 function fuckWithCurves(curves) {
   const newCurves = [];
 
-  curves.forEach((curve) => {
+  curves.forEach(curve => {
     console.log(curve);
     console.log(curve.constructor.name);
-    if (curve.constructor.name == 'LineCurve') {
-      console.log('modding curve')
+    if (curve.constructor.name == "LineCurve") {
+      console.log("modding curve");
       const startX = curve.v1.x;
       const startY = curve.v1.y;
       const endX = curve.v2.x;
       const endY = curve.v2.y;
 
-      console.log(startX, startY, endX, endY)
-      console.log('width ' + (endX - startX))
-      console.log('height ' + (endY - startY))
+      console.log(`${startX},${startY} to ${endX},${endY}`);
+      console.log("width " + (endX - startX));
+      console.log("height " + (endY - startY));
 
-      const NumPoints = 100;
+      const NumPoints = 10;
 
-      for (let i = 0; i < NumPoints -1 ; i++) {
-        const c =
-          new THREE.LineCurve(
-            new THREE.Vector2(
-              startX + ((endX - startX) * (i/NumPoints)),
-              startY + ((endY - startY) * (i/NumPoints))
-            ),
-            new THREE.Vector2(
-              startX + ((endX - startX) * ((i+1)/NumPoints)),
-              startY + ((endY - startY) * ((i+1)/NumPoints))
-            )
-          );
+      for (let i = 0; i < NumPoints; i++) {
+        const v1 = new THREE.Vector2(
+          startX + (endX - startX) * (i / NumPoints),
+          startY + (endY - startY) * (i / NumPoints)
+        );
+        const v2 = new THREE.Vector2(
+          startX + (endX - startX) * ((i + 1) / NumPoints),
+          startY + (endY - startY) * ((i + 1) / NumPoints)
+        );
+
+        console.log(`adding ${v1.x},${v1.y} -> ${v2.x},${v2.y}`);
+
+        const c = new THREE.LineCurve(v1, v2);
         newCurves.push(c);
       }
     } else {
       newCurves.push(curve);
     }
-  })
-  
+  });
+
   return newCurves;
 }
 
 function loadSVG(url) {
-
   scene = new THREE.Scene();
   scene.background = new THREE.Color(0xb0b0b0);
-
 
   var helper = new THREE.GridHelper(160, 10);
   helper.rotation.x = Math.PI / 2;
@@ -120,7 +111,6 @@ function loadSVG(url) {
     // group.position.y = 70;
     group.scale.y *= -1;
 
-
     const leather = new THREE.ImageUtils.loadTexture("uv_grid_opengl.jpg");
     leather.wrapS = leather.wrapT = THREE.RepeatWrapping;
     var uniformsL = {
@@ -138,8 +128,8 @@ function loadSVG(url) {
       fragmentShader: fsL
     });
 
-    const bend = new Bend(0.4, 0.2, 0);
-    bend.constraint = ModConstant.LEFT;
+    // const bend = new Bend(0.4, 0.2, 0);
+    // bend.constraint = ModConstant.LEFT;
 
     for (var i = 0; i < paths.length; i++) {
       var path = paths[i];
@@ -162,24 +152,42 @@ function loadSVG(url) {
         var shapes = path.toShapes(false);
 
         for (var j = 0; j < shapes.length; j++) {
-          
           var shape = shapes[j];
+          console.log(shape.curves.length);
+          console.log(shape.curves);
           shape.closePath();
-          shape.holes = []
+          console.log(shape.curves.length);
+          console.log(shape.curves);
+          // shape.holes = [];
           console.log(shape);
 
           console.log(shape);
-          
+
           shape.curves = fuckWithCurves(shape.curves);
 
           // var geometry = new THREE.ShapeGeometry( shape );
-
+          //
           const depth = 0.3;
 
           var geometry = new THREE.ExtrudeGeometry(shape, {
             depth: depth,
+            steps: 10,
             bevelEnabled: false
           });
+
+          // geometry.dynamic = true;
+
+          // THREE.GeometryUtils.center( geometry );
+
+          // var i, n = 6, maxEdgeLength = 4;
+          // for ( i = 0; i < n; i ++ ) THREE.GeometryUtils.tessellate( geometry, maxEdgeLength );
+
+          maxEdgeLength = 1;
+          var times = 5; //Times to do the split of faces
+          var tessellateModifier = new THREE.TessellateModifier(maxEdgeLength);
+          for (var i = 0; i < times; i++) {
+            tessellateModifier.modify(geometry);
+          }
 
           twist(geometry);
 
@@ -187,13 +195,17 @@ function loadSVG(url) {
           mesh.rotation.x = Math.PI;
           // mesh.translateZ(-depth - 1);
 
-
           const center = new THREE.Vector3();
           mesh.geometry.computeBoundingBox();
-          mesh.geometry.boundingBox.getCenter( center );
-          
-          mesh.translateX( - center.x );
-          mesh.translateY( - center.y );
+          mesh.geometry.boundingBox.getCenter(center);
+
+          mesh.translateX(-center.x);
+          mesh.translateY(-center.y);
+
+          modifier = new ModifierStack(mesh);
+          bend = new Bend(1.5, 0.2, 0);
+          bend.constraint = ModConstant.LEFT;
+          // modifier.addModifier(bend);
 
           group.add(mesh);
         }
@@ -215,6 +227,7 @@ function animate() {
   requestAnimationFrame(animate);
 
   render();
+  modifier && modifier.apply();
 }
 
 function render() {
