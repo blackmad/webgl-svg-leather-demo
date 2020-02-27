@@ -1,27 +1,59 @@
 <!DOCTYPE html>
 <html>
-	<head>
-		<meta charset="utf-8">
-		<title>My first three.js app</title>
-		<style>
-			body { margin: 0; }
-			canvas { display: block; }
-      #container {width: 100%; height: 100%;}
+  <head>
+    <meta charset="utf-8" />
+    <title>My first three.js app</title>
+    <style>
+      body {
+        margin: 0;
+      }
+      canvas {
+        display: block;
+      }
+      #container {
+        width: 100%;
+        height: 100%;
+      }
     </style>
-    
+
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/110/three.js"></script>
     <script src="http://threejs.org/examples/js/renderers/SVGRenderer.js"></script>
-<script src="http://threejs.org/examples/js/renderers/Projector.js"></script>
-<script src="http://threejs.org/examples/js/loaders/SVGLoader.js"></script>
-<script src="https://threejs.org/examples/js/controls/OrbitControls.js"></script>
-	</head>
-	<body>
+    <script src="http://threejs.org/examples/js/renderers/Projector.js"></script>
+    <script src="http://threejs.org/examples/js/loaders/SVGLoader.js"></script>
+    <script src="https://threejs.org/examples/js/controls/OrbitControls.js"></script>
+    <script src="https://drawcall.github.io/threejs-geometry-modifiers/dist/modifier.js"></script>
+  </head>
+  <body>
     <div id="container"></div>
 
-		<script src="main.js"></script>
-		<script>
-			// Our Javascript will go here.
+    <script id="vertexShader" type="x-shader/x-vertex">
+      varying vec3   vNormal;
+      varying vec2   vUv;
+
+      void main() {
+
+          vNormal = normal;
+          vUv = uv;
+
+          gl_Position = projectionMatrix * modelViewMatrix * vec4(position,1.0);
+      }
     </script>
 
-	</body>
+		<script id="fragmentShader-L" type="x-shader/x-fragment">
+			// create the shared variables. which are set in the vertex shader
+			//varying vec3 		vNormal;
+			varying vec2 		vUv;
+			uniform sampler2D 	leatherImage;
+
+			void main(void) {
+			
+				gl_FragColor = texture2D(leatherImage, vUv);
+			}
+		</script>
+
+    <script src="main.js"></script>
+    <script>
+      // Our Javascript will go here.
+    </script>
+  </body>
 </html>
