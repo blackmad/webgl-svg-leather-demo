@@ -1,9 +1,13 @@
-var renderer, stats, scene, camera;
+// curve? https://stackoverflow.com/questions/51596272/warp-curve-all-vertices-around-a-pivot-point-axis-three-js-glsl
+
+var renderer, stats, scene, camera, modifier;
 
 init();
 animate();
 
 //
+
+
 
 function init() {
   var container = document.getElementById("container");
@@ -39,6 +43,27 @@ function init() {
   };
 
   loadSVG("/cuff.svg");
+}
+
+function twist(geometry) {
+  const quaternion = new THREE.Quaternion();
+
+  for (let i = 0; i < geometry.vertices.length; i++) {
+    // a single vertex Y position
+    const yPos = geometry.vertices[i].y;
+    const twistAmount = 0.1;
+    const upVec = new THREE.Vector3(0, 1, 0);
+
+    quaternion.setFromAxisAngle(
+      upVec, 
+      (Math.PI / 180) * (yPos / twistAmount)
+    );
+
+    geometry.vertices[i].applyQuaternion(quaternion);
+  }
+  
+  // tells Three.js to re-render this mesh
+  geometry.verticesNeedUpdate = true;
 }
 
 function loadSVG(url) {
@@ -84,6 +109,9 @@ function loadSVG(url) {
       fragmentShader: fsL
     });
 
+    const bend = new Bend(0.4, 0.2, 0);
+    bend.constraint = ModConstant.LEFT;
+
     for (var i = 0; i < paths.length; i++) {
       var path = paths[i];
 
@@ -105,18 +133,22 @@ function loadSVG(url) {
           var shape = shapes[j];
 
           // var geometry = new THREE.ShapeBufferGeometry( shape );
-          // var mesh = new THREE.Mesh( geometry, material );
+
 
           const depth = 0.1;
 
-          var shape3d = new THREE.ExtrudeBufferGeometry(shape, {
+          var geometry = new THREE.ExtrudeBufferGeometry(shape, {
             depth: depth,
             bevelEnabled: false
           });
 
-          var mesh = new THREE.Mesh(shape3d, material);
+          geometry = (new THREE.Geometry()).fromBufferGeometry(geometry);
+          twist(geometry);
+          console.log(geometry)
+
+          var mesh = new THREE.Mesh(geometry, material);
           mesh.rotation.x = Math.PI;
-          mesh.translateZ(-depth - 1);
+          // mesh.translateZ(-depth - 1);
 
 
           const center = new THREE.Vector3();
@@ -128,6 +160,12 @@ function loadSVG(url) {
 
           console.log(shape);
           group.add(mesh);
+
+          console.log(mesh);
+
+          // modifier = new ModifierStack(mesh);
+          // modifier.addModifier(bend);
+          console.log(geometry);
         }
       }
     }
@@ -147,6 +185,7 @@ function animate() {
   requestAnimationFrame(animate);
 
   render();
+  modifier && modifier.apply();
 }
 
 function render() {
