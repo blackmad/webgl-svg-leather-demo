@@ -165,6 +165,7 @@ function loadSVG(url) {
           
           var shape = shapes[j];
           shape.closePath();
+          shape.holes = []
           console.log(shape);
 
           console.log(shape);
